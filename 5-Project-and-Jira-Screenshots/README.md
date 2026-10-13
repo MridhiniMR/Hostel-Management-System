@@ -1,7 +1,5 @@
 # Project Creation / GitHub / Jira Evidence
 
-Add the team's **actual screenshots** here.
-
 Recommended files:
 - `github-repository.png`
 - `github-folder-structure.png`
