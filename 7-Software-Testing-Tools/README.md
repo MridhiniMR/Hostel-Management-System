@@ -30,7 +30,3 @@ For each bug found using a testing tool or AI-assisted/vibe-coding workflow, rec
 | Fix/patch | TODO |
 | Commit/PR | TODO |
 | Retest result | TODO |
-
-## Test Execution Status
-
-Do not change `Not Executed` to `Pass`/`Fail` without actual execution evidence.
