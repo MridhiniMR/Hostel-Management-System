@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Students · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Student records</h1><p>Create, update, and search student details.</p></div></div>
+<section class="panel">
+  <h2>Search by student identifier</h2>
+  <form action="/students" method="get" class="inline-form"><input name="q" value="{{ q }}" placeholder="e.g. S001" maxlength="32"><button type="submit">Search</button><a class="button secondary" href="/students">Clear</a></form>
+</section>
+<section class="panel">
+  <h2>Create student</h2>
+  <form action="/students" method="post" class="form-grid">
+    <label>Student ID *<input name="student_id" required maxlength="32" placeholder="S001"></label>
+    <label>Full name *<input name="name" required maxlength="120"></label>
+    <label>Email<input name="email" type="email" maxlength="254"></label>
+    <label>Phone<input name="phone" maxlength="24"></label>
+    <label>Department<input name="department" maxlength="100"></label>
+    <label>Year of study<input name="year_of_study" type="number" min="1" max="8"></label>
+    <label class="full">Link student login username (optional)<input name="account_username" maxlength="64" placeholder="Create the STUDENT account first"></label>
+    <div class="full"><button type="submit">Create student</button></div>
+  </form>
+</section>
+<section class="panel">
+  <h2>Students ({{ students|length }})</h2>
+  <div class="table-wrap"><table><thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Year</th><th></th></tr></thead><tbody>
+  {% for s in students %}<tr><td>{{ s.student_id }}</td><td>{{ s.name }}</td><td>{{ s.email or '—' }}</td><td>{{ s.phone or '—' }}</td><td>{{ s.department or '—' }}</td><td>{{ s.year_of_study or '—' }}</td><td><a href="/students/{{ s.student_id }}/edit">Edit</a></td></tr>{% else %}<tr><td colspan="7" class="muted">No matching students yet.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

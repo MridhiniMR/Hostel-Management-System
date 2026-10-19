@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Dashboard</h1><p>Signed in as <strong>{{ user.username }}</strong> ({{ user.role|lower }}).</p></div></div>
+{% if user.role == 'ADMIN' %}
+<div class="cards">
+  <div class="metric"><span>Students</span><strong>{{ counts.students }}</strong><a href="/students">Manage students →</a></div>
+  <div class="metric"><span>Rooms</span><strong>{{ counts.rooms }}</strong><a href="/rooms">View rooms →</a></div>
+  <div class="metric"><span>Active allocations</span><strong>{{ counts.active_allocations }}</strong><a href="/allocations">Manage allocations →</a></div>
+</div>
+<section class="panel"><h2>Administrator tasks</h2><p>Maintain student and room records, assign rooms within capacity, and review the API specification.</p><div class="actions"><a class="button" href="/students">Student records</a><a class="button secondary" href="/rooms">Room occupancy</a><a class="button secondary" href="/allocations">Room allocations</a><a class="button secondary" href="/docs">API documentation</a></div></section>
+{% else %}
+<section class="panel"><h2>Your hostel information</h2><p>Use the student page to see only your own current room allocation.</p><a class="button" href="/my-allocation">View my allocation</a></section>
+{% endif %}
+{% endblock %}
