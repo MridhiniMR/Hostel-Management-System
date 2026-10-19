@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Allocations · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Room allocations</h1><p>Full rooms and duplicate active allocations are rejected.</p></div></div>
+<section class="panel"><h2>Allocate a student</h2>
+{% if students and rooms %}<form action="/allocations" method="post" class="inline-form"><label>Student<select name="student_id" required><option value="">Choose student…</option>{% for s in students %}<option value="{{ s.student_id }}">{{ s.student_id }} — {{ s.name }}</option>{% endfor %}</select></label><label>Room<select name="room_id" required><option value="">Choose available room…</option>{% for r in rooms %}{% if r.available > 0 %}<option value="{{ r.room_id }}">{{ r.room_id }} ({{ r.available }} available)</option>{% endif %}{% endfor %}</select></label><button type="submit">Allocate room</button></form>{% else %}<p class="muted">Create at least one student and one room before allocating.</p>{% endif %}
+</section>
+<section class="panel"><h2>Allocation history</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>
+{% for a in allocations %}<tr><td>{{ a.allocation_id }}</td><td>{{ a.student_id }}</td><td>{{ a.room_id }}</td><td><span class="pill {{ 'active' if a.status == 'ACTIVE' else 'inactive' }}">{{ a.status }}</span></td><td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '—' }}</td><td>{% if a.status == 'ACTIVE' %}<form action="/allocations/{{ a.allocation_id }}/deallocate" method="post"><button type="submit" class="small-button danger-button">Deallocate</button></form>{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="muted">No allocation records yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

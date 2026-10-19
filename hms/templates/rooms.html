@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Rooms · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Rooms & occupancy</h1><p>Occupancy is calculated from active allocations.</p></div></div>
+<section class="panel"><h2>Create room</h2><form action="/rooms" method="post" class="inline-form"><label>Room ID<input name="room_id" required maxlength="32" placeholder="R101"></label><label>Capacity<input name="capacity" type="number" min="1" max="1000" required></label><button type="submit">Create room</button></form></section>
+<section class="panel"><h2>Room inventory ({{ rooms|length }})</h2><div class="table-wrap"><table><thead><tr><th>Room ID</th><th>Capacity</th><th>Occupied</th><th>Available</th><th>Update capacity</th></tr></thead><tbody>
+{% for r in rooms %}<tr><td>{{ r.room_id }}</td><td>{{ r.capacity }}</td><td>{{ r.occupied }}</td><td><span class="{% if r.available == 0 %}danger-text{% endif %}">{{ r.available }}</span></td><td><form action="/rooms/{{ r.room_id }}/capacity" method="post" class="inline-form compact"><input name="capacity" type="number" min="1" max="1000" value="{{ r.capacity }}" aria-label="New capacity for {{ r.room_id }}"><button class="small-button" type="submit">Save</button></form></td></tr>{% else %}<tr><td colspan="5" class="muted">No rooms yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

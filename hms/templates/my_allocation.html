@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}My allocation · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>My room allocation</h1><p>Only information linked to your signed-in student account is shown here.</p></div></div>
+<section class="panel">
+{% if allocation %}
+  <div class="cards"><div class="metric"><span>Student</span><strong>{{ allocation.student.student_id }}</strong><p>{{ allocation.student.name }}</p></div><div class="metric"><span>Room</span><strong>{{ allocation.room.room_id }}</strong><p>Active allocation</p></div><div class="metric"><span>Allocation since</span><strong>{{ allocation.created_at.strftime('%Y-%m-%d') }}</strong></div></div>
+{% else %}<p>No active room allocation is linked to your account. Contact the hostel administrator if this seems incorrect.</p>{% endif %}
+</section>
+{% endblock %}

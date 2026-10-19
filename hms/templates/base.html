@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Hostel Management System{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Hostel Management System</a>
+    {% if user %}
+    <nav>
+      <a href="/">Dashboard</a>
+      {% if user.role == 'ADMIN' %}
+        <a href="/students">Students</a>
+        <a href="/rooms">Rooms</a>
+        <a href="/allocations">Allocations</a>
+        <a href="/docs">API docs</a>
+      {% else %}
+        <a href="/my-allocation">My allocation</a>
+      {% endif %}
+      <form class="inline" action="/logout" method="post"><button class="link-button" type="submit">Log out</button></form>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+    {% if success %}<div class="alert success">{{ success }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Hostel Management System · Software Engineering Mini-Project</footer>
+</body>
+</html>

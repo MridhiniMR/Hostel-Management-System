@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Edit student · Hostel Management System{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Edit student</h1><p>Student ID: <strong>{{ student.student_id }}</strong></p></div><a class="button secondary" href="/students">Back to students</a></div>
+<section class="panel"><form action="/students/{{ student.student_id }}/edit" method="post" class="form-grid">
+  <label>Full name *<input name="name" value="{{ student.name }}" required maxlength="120"></label>
+  <label>Email<input name="email" type="email" value="{{ student.email or '' }}" maxlength="254"></label>
+  <label>Phone<input name="phone" value="{{ student.phone or '' }}" maxlength="24"></label>
+  <label>Department<input name="department" value="{{ student.department or '' }}" maxlength="100"></label>
+  <label>Year of study<input name="year_of_study" type="number" min="1" max="8" value="{{ student.year_of_study or '' }}"></label>
+  <div class="full"><button type="submit">Save changes</button></div>
+</form></section>
+{% endblock %}
