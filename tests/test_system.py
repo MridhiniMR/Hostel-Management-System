@@ -56,7 +56,71 @@ def test_student_crud_and_exact_identifier_search(system):
     assert results.status_code == 200
     assert [s["student_id"] for s in results.json()] == ["S001"]
     assert client.get("/api/v1/students?q=S999", headers=headers).json() == []
+def test_student_create_update_validation_and_persistence(system):
+    client = system["client"]
+    headers = login(client)
 
+    # Duplicate student identifiers must be rejected.
+    first = client.post(
+        "/api/v1/students",
+        headers=headers,
+        json={"student_id": "S200", "name": "Original Name"},
+    )
+    assert first.status_code == 201, first.text
+
+    duplicate = client.post(
+        "/api/v1/students",
+        headers=headers,
+        json={"student_id": "S200", "name": "Duplicate Name"},
+    )
+    assert duplicate.status_code == 409
+
+    # Valid updates must persist when the record is fetched again.
+    updated = client.put(
+        "/api/v1/students/S200",
+        headers=headers,
+        json={
+            "name": "Updated Name",
+            "email": "updated@example.edu",
+            "year_of_study": 3,
+        },
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["name"] == "Updated Name"
+
+    fetched = client.get("/api/v1/students/S200", headers=headers)
+    assert fetched.status_code == 200
+    assert fetched.json()["name"] == "Updated Name"
+    assert fetched.json()["email"] == "updated@example.edu"
+    assert fetched.json()["year_of_study"] == 3
+
+    # Invalid updates must be rejected without changing the saved record.
+    invalid_email = client.put(
+        "/api/v1/students/S200",
+        headers=headers,
+        json={"email": "not-an-email"},
+    )
+    assert invalid_email.status_code == 422
+
+    invalid_year = client.put(
+        "/api/v1/students/S200",
+        headers=headers,
+        json={"year_of_study": 0},
+    )
+    assert invalid_year.status_code == 422
+
+    blank_name = client.put(
+        "/api/v1/students/S200",
+        headers=headers,
+        json={"name": "   "},
+    )
+    assert blank_name.status_code == 422
+
+    unchanged = client.get("/api/v1/students/S200", headers=headers)
+    assert unchanged.status_code == 200
+    assert unchanged.json()["name"] == "Updated Name"
+    assert unchanged.json()["email"] == "updated@example.edu"
+    assert unchanged.json()["year_of_study"] == 3
 
 def test_input_validation_rejects_hostile_identifiers_and_incomplete_student(system):
     client = system["client"]
