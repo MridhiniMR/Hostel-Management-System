@@ -182,25 +182,59 @@ def test_room_capacity_duplicate_allocation_and_atomic_deallocation(system):
 def test_student_can_only_view_own_allocation(system):
     client = system["client"]
     admin_headers = login(client)
-    for student_id, username in (("S001", "student1"), ("S002", "student2")):
-        resp = client.post("/api/v1/students", headers=admin_headers, json={
-            "student_id": student_id, "name": f"Student {student_id}", "account_username": username,
-        })
-        assert resp.status_code == 201, resp.text
-    assert client.post("/api/v1/rooms", headers=admin_headers, json={"room_id": "R101", "capacity": 2}).status_code == 201
-    assert client.post("/api/v1/allocations", headers=admin_headers, json={"student_id": "S001", "room_id": "R101"}).status_code == 201
 
-    student_headers = login(client, "student1", "StudentPassphrase9!")
-    own = client.get("/api/v1/me/allocation", headers=student_headers)
-    assert own.status_code == 200
-    assert own.json()["student_id"] == "S001"
-    assert own.json()["room_id"] == "R101"
+    for student_id, username in (("S001", "student1"), ("S002", "student2")):
+        resp = client.post(
+            "/api/v1/students",
+            headers=admin_headers,
+            json={
+                "student_id": student_id,
+                "name": f"Student {student_id}",
+                "account_username": username,
+            },
+        )
+        assert resp.status_code == 201, resp.text
+
+    for room_id in ("R101", "R102"):
+        resp = client.post(
+            "/api/v1/rooms",
+            headers=admin_headers,
+            json={"room_id": room_id, "capacity": 1},
+        )
+        assert resp.status_code == 201, resp.text
+
+    for student_id, room_id in (("S001", "R101"), ("S002", "R102")):
+        resp = client.post(
+            "/api/v1/allocations",
+            headers=admin_headers,
+            json={"student_id": student_id, "room_id": room_id},
+        )
+        assert resp.status_code == 201, resp.text
+
+    # Each student sees only their own allocation.
+    student1_headers = login(client, "student1", "StudentPassphrase9!")
+    student1_allocation = client.get(
+        "/api/v1/me/allocation", headers=student1_headers
+    )
+    assert student1_allocation.status_code == 200
+    assert student1_allocation.json()["student_id"] == "S001"
+    assert student1_allocation.json()["room_id"] == "R101"
 
     student2_headers = login(client, "student2", "StudentPassphrase10!")
-    none = client.get("/api/v1/me/allocation", headers=student2_headers)
-    assert none.status_code == 200
-    assert none.json() is None
+    student2_allocation = client.get(
+        "/api/v1/me/allocation", headers=student2_headers
+    )
+    assert student2_allocation.status_code == 200
+    assert student2_allocation.json()["student_id"] == "S002"
+    assert student2_allocation.json()["room_id"] == "R102"
 
+    # Admins cannot use this student-only endpoint.
+    forbidden = client.get("/api/v1/me/allocation", headers=admin_headers)
+    assert forbidden.status_code == 403
+
+    # Unauthenticated requests must be rejected.
+    unauthenticated = client.get("/api/v1/me/allocation")
+    assert unauthenticated.status_code == 401
 
 def test_room_capacity_cannot_be_reduced_below_occupancy(system):
     client = system["client"]
