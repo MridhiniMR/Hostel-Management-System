@@ -262,3 +262,38 @@ def test_logout_revokes_the_bearer_token(system):
     assert logout_response.status_code == 204
     revoked_access = client.get("/api/v1/students", headers=headers)
     assert revoked_access.status_code == 401
+def test_student_search_matches_exact_identifier_only(system):
+    client = system["client"]
+    headers = login(client)
+
+    for student_id, name in [
+        ("S301", "Student One"),
+        ("S301A", "Student Two"),
+        ("S302", "Student Three"),
+    ]:
+        response = client.post(
+            "/api/v1/students",
+            headers=headers,
+            json={"student_id": student_id, "name": name},
+        )
+        assert response.status_code == 201, response.text
+
+    # Exact match should return only the requested student.
+    response = client.get(
+        "/api/v1/students?q=S301",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert [student["student_id"] for student in response.json()] == ["S301"]
+
+    # A partial identifier should not match another student's record.
+    response = client.get(
+        "/api/v1/students?q=S30",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == []
+
+    # An unauthenticated user must not search student records.
+    response = client.get("/api/v1/students?q=S301")
+    assert response.status_code == 401
