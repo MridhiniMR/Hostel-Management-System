@@ -331,3 +331,41 @@ def test_student_search_matches_exact_identifier_only(system):
     # An unauthenticated user must not search student records.
     response = client.get("/api/v1/students?q=S301")
     assert response.status_code == 401
+
+
+def test_browser_rooms_page_displays_occupancy_and_availability(system):
+    client = system["client"]
+    headers = login(client)
+
+    # Create a room with capacity for two students.
+    room = client.post(
+        "/api/v1/rooms",
+        headers=headers,
+        json={"room_id": "R201", "capacity": 2},
+    )
+    assert room.status_code == 201
+
+    # Create a student and allocate them to the room.
+    student = client.post(
+        "/api/v1/students",
+        headers=headers,
+        json={"student_id": "S201", "name": "Demo Student"},
+    )
+    assert student.status_code == 201
+
+    allocation = client.post(
+        "/api/v1/allocations",
+        headers=headers,
+        json={"student_id": "S201", "room_id": "R201"},
+    )
+    assert allocation.status_code == 201
+
+    # Verify the actual browser page.
+    page = client.get("/rooms")
+    assert page.status_code == 200
+    assert "R201" in page.text
+    assert "Occupied" in page.text
+    assert "Available" in page.text
+
+    # The room should show 1 occupied bed and 1 available bed.
+    assert "1" in page.text
