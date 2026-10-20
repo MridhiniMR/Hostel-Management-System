@@ -147,10 +147,19 @@ def room_representation(db: Session, room: Room) -> dict:
     return {"room_id": room.room_id, "capacity": room.capacity, "occupied": occupied, "available": max(0, room.capacity - occupied)}
 
 
-def list_rooms(db: Session) -> list[Room]:
-    return list(db.scalars(select(Room).order_by(Room.room_id)))
+def get_room(db: Session, room_id: str) -> Room:
+    room = find_room(db, room_id)
+    if room is None:
+        raise DomainError(404, "ROOM_NOT_FOUND", "Room was not found.")
+    return room
 
 
+def list_rooms(db: Session, available_only: bool = False) -> list[Room]:
+    """Return rooms ordered by identifier; optionally only rooms with a free bed (FR-05)."""
+    rooms = list(db.scalars(select(Room).order_by(Room.room_id)))
+    if available_only:
+        rooms = [room for room in rooms if occupancy_count(db, room.id) < room.capacity]
+    return rooms
 def list_students(db: Session, query: str | None = None) -> list[Student]:
     return search_students(db, query)
 
