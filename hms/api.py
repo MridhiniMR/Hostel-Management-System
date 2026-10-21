@@ -18,7 +18,7 @@ from hms.schemas import (
 from hms.security import authenticate_and_issue_token, log_event, login_source_key, revoke_token
 from hms.services import (
     allocation_representation, create_allocation, create_room, create_student,
-    deallocate, list_allocations, list_rooms, list_students, my_active_allocation,
+    deallocate, get_room, list_allocations, list_rooms, list_students, my_active_allocation,
     recent_audit_events, room_representation, update_allocation, update_room,
     update_student,
 )
@@ -84,8 +84,13 @@ def put_student(student_id: str, body: StudentUpdate, db: Session = Depends(get_
 
 
 @router.get("/rooms", response_model=list[RoomResponse])
-def get_rooms(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return [RoomResponse(**room_representation(db, room)) for room in list_rooms(db)]
+def get_rooms(available_only: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return [RoomResponse(**room_representation(db, room)) for room in list_rooms(db, available_only)]
+
+
+@router.get("/rooms/{room_id}", response_model=RoomResponse)
+def get_room_by_id(room_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return RoomResponse(**room_representation(db, get_room(db, room_id)))
 
 
 @router.post("/rooms", response_model=RoomResponse, status_code=status.HTTP_201_CREATED)
