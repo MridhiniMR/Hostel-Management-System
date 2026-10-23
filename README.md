@@ -20,14 +20,13 @@ The current requirements baseline specifies a technology-neutral web application
 
 ## 👥 Team
 
-> Replace this section with the actual team members and university IDs.
 
-| Member | USN | Role / Contribution |
+| Member | USN |
 |---|---|---|
-| Member 1 | TODO | TODO |
-| Member 2 | TODO | TODO |
-| Member 3 | TODO | TODO |
-| Member 4 | TODO | TODO |
+| Manasa Bhaktha S | PES1UG24CS258 | 
+| Manasi Manoj Jadhav | PES1UG24CS259 |
+| Meghana Grandhi | PES1UG24CS268 | 
+| Mridhini M R | PES1UG24CS277 | 
 
 ## 🧩 Main Functional Requirements
 
