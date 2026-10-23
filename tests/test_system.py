@@ -369,3 +369,16 @@ def test_browser_rooms_page_displays_occupancy_and_availability(system):
 
     # The room should show 1 occupied bed and 1 available bed.
     assert "1" in page.text
+
+
+
+def test_https_enforcement_redirects_http_requests(monkeypatch, system):
+    from hms import main
+
+    monkeypatch.setattr(main, "REQUIRE_HTTPS", True)
+
+    client = system["client"]
+    response = client.get("/health", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"].startswith("https://")
