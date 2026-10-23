@@ -20,13 +20,12 @@ The current requirements baseline specifies a technology-neutral web application
 
 ## 👥 Team
 
-
 | Member | USN |
-|---|---|---|
-| Manasa Bhaktha S | PES1UG24CS258 | 
+|---|---|
+| Manasa Bhaktha S | PES1UG24CS258 |
 | Manasi Manoj Jadhav | PES1UG24CS259 |
-| Meghana Grandhi | PES1UG24CS268 | 
-| Mridhini M R | PES1UG24CS277 | 
+| Meghana Grandhi | PES1UG24CS268 |
+| Mridhini M R | PES1UG24CS277 |
 
 ## 🧩 Main Functional Requirements
 
