@@ -382,3 +382,39 @@ def test_https_enforcement_redirects_http_requests(monkeypatch, system):
 
     assert response.status_code == 307
     assert response.headers["location"].startswith("https://")
+
+def test_injection_like_student_search_does_not_expose_records(system):
+    client = system["client"]
+    headers = login(client)
+
+    for student_id, name in (
+        ("S101", "Student One"),
+        ("S102", "Student Two"),
+    ):
+        response = client.post(
+            "/api/v1/students",
+            headers=headers,
+            json={"student_id": student_id, "name": name},
+        )
+        assert response.status_code == 201, response.text
+
+    # Search must match the exact identifier, not interpret input as SQL.
+    response = client.get(
+        "/api/v1/students",
+        headers=headers,
+        params={"q": "' OR 1=1--"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+    # Confirm that both original records remain unchanged.
+    for student_id, expected_name in (
+        ("S101", "Student One"),
+        ("S102", "Student Two"),
+    ):
+        response = client.get(
+            f"/api/v1/students/{student_id}",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["name"] == expected_name
