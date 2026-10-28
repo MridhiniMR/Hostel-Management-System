@@ -289,13 +289,37 @@ def test_login_throttle_blocks_repeated_failures_for_source_identifier_pair(syst
     db.close()
 
 
-def test_logout_revokes_the_bearer_token(system):
+
+def test_logout_revokes_the_bearer_token_and_records_audit_event(system):
     client = system["client"]
     headers = login(client)
+    token = headers["Authorization"].removeprefix("Bearer ")
+
     logout_response = client.post("/api/v1/auth/logout", headers=headers)
     assert logout_response.status_code == 204
+
     revoked_access = client.get("/api/v1/students", headers=headers)
     assert revoked_access.status_code == 401
+
+    admin_headers = login(client)
+    events_response = client.get("/api/v1/audit-events", headers=admin_headers)
+    assert events_response.status_code == 200
+    events = events_response.json()
+
+    logout_events = [
+        event for event in events
+        if event["event_type"] == "AUTH_LOGOUT"
+    ]
+    assert len(logout_events) == 1
+    assert logout_events[0]["outcome"] == "SUCCESS"
+    assert logout_events[0]["actor_identifier"] == "warden"
+    assert logout_events[0]["timestamp"]
+
+    # Credentials must not appear in the audit response.
+    serialized_events = str(events)
+    assert token not in serialized_events
+    assert "CorrectHorseBattery9!" not in serialized_events
+
 def test_student_search_matches_exact_identifier_only(system):
     client = system["client"]
     headers = login(client)
@@ -418,3 +442,47 @@ def test_injection_like_student_search_does_not_expose_records(system):
         )
         assert response.status_code == 200, response.text
         assert response.json()["name"] == expected_name
+
+def test_unauthorized_access_attempts_are_audited(system):
+    client = system["client"]
+
+    # An unauthenticated request must produce a 401 and an audit event.
+    unauthenticated = client.get("/api/v1/students")
+    assert unauthenticated.status_code == 401
+
+    # An authenticated student must not be able to access the admin-only audit log.
+    student_headers = login(
+        client,
+        "student1",
+        "StudentPassphrase9!",
+    )
+    forbidden = client.get(
+        "/api/v1/audit-events",
+        headers=student_headers,
+    )
+    assert forbidden.status_code == 403
+
+    # An administrator can inspect both recorded failures.
+    admin_headers = login(client)
+    response = client.get("/api/v1/audit-events", headers=admin_headers)
+    assert response.status_code == 200
+    events = response.json()
+
+    assert any(
+        event["event_type"] == "AUTH_ACCESS_DENIED"
+        and event["outcome"] == "FAILURE"
+        and event["details"].get("path") == "/api/v1/students"
+        and event["details"].get("reason") == "authentication_required"
+        and event["timestamp"]
+        for event in events
+    )
+
+    assert any(
+        event["event_type"] == "AUTHORIZATION_DENIED"
+        and event["outcome"] == "FAILURE"
+        and event["actor_identifier"] == "student1"
+        and event["details"].get("path") == "/api/v1/audit-events"
+        and event["details"].get("reason") == "admin_role_required"
+        and event["timestamp"]
+        for event in events
+    )

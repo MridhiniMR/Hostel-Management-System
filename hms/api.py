@@ -45,10 +45,23 @@ def login(request: Request, body: LoginRequest, response: Response, db: Session 
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(request: Request, response: Response, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def logout(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     revoke_token(db, raw_request_token(request))
+    log_event(
+        db,
+        event_type="AUTH_LOGOUT",
+        outcome="SUCCESS",
+        actor=user,
+    )
+    db.commit()
     response.delete_cookie(SESSION_COOKIE_NAME, path="/")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 
 @router.get("/students", response_model=list[StudentResponse])
