@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from datetime import timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import func, insert, literal, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -184,12 +184,26 @@ def create_allocation(db: Session, student_id: str, room_id: str, actor: User) -
             raise DomainError(404, "ROOM_NOT_FOUND", "Room was not found.")
         if active_allocation_for_student(db, student.id):
             raise DomainError(409, "STUDENT_ALREADY_ALLOCATED", "This student already has an active room allocation.")
-        occupied = occupancy_count(db, room.id)
-        if occupied >= room.capacity:
+        # NFR-03: the capacity check and the insert are ONE statement, so two concurrent
+        # requests cannot both pass the check and then both insert (check-then-insert race).
+        now = utcnow()
+        active_in_room = (
+            select(func.count(Allocation.id))
+            .where(Allocation.room_id == room.id, Allocation.status == "ACTIVE")
+            .scalar_subquery()
+        )
+        room_capacity = select(Room.capacity).where(Room.id == room.id).scalar_subquery()
+        result = db.execute(
+            insert(Allocation).from_select(
+                ["student_id", "room_id", "status", "created_at", "updated_at"],
+                select(literal(student.id), literal(room.id), literal("ACTIVE"), literal(now), literal(now))
+                .where(active_in_room < room_capacity),
+            )
+        )
+        if result.rowcount == 0:
+            occupied = occupancy_count(db, room.id)
             raise DomainError(409, "ROOM_FULL", "The selected room has no available capacity.", {"occupied": occupied, "capacity": room.capacity})
-        allocation = Allocation(student_id=student.id, room_id=room.id, status="ACTIVE")
-        db.add(allocation)
-        db.flush()
+        allocation = active_allocation_for_student(db, student.id)
         log_event(db, event_type=event_type, outcome="SUCCESS", actor=actor, details={"student_id": student_id, "room_id": room_id})
         db.commit()
         db.refresh(allocation)
@@ -200,6 +214,10 @@ def create_allocation(db: Session, student_id: str, room_id: str, actor: User) -
     except IntegrityError:
         _write_allocation_failure(db, actor, event_type, {"requested_student_id": str(student_id)[:32], "requested_room_id": str(room_id)[:32], "error_code": "INTEGRITY_CONFLICT"})
         raise DomainError(409, "ALLOCATION_CONFLICT", "The allocation conflicts with an existing allocation or database constraint.")
+    except Exception:
+        # NFR-03 / TP-12: any unexpected failure undoes the whole allocation transaction.
+        db.rollback()
+        raise
 
 
 def update_allocation(db: Session, allocation_id: int, target_room_id: str, actor: User) -> Allocation:
@@ -212,12 +230,24 @@ def update_allocation(db: Session, allocation_id: int, target_room_id: str, acto
         room = db.scalar(select(Room).where(Room.room_id == validate_identifier(target_room_id)).with_for_update())
         if room is None:
             raise DomainError(404, "ROOM_NOT_FOUND", "Target room was not found.")
-        occupied = occupancy_count(db, room.id, excluding_allocation_id=allocation.id)
-        if room.id != allocation.room_id and occupied >= room.capacity:
-            raise DomainError(409, "ROOM_FULL", "The target room has no available capacity.", {"occupied": occupied, "capacity": room.capacity})
         old_room_id = allocation.room.room_id
-        allocation.room = room
-        allocation.updated_at = utcnow()
+        if room.id != allocation.room_id:
+            # NFR-03: capacity check and move are ONE statement (no check-then-update race).
+            active_in_target = (
+                select(func.count(Allocation.id))
+                .where(Allocation.room_id == room.id, Allocation.status == "ACTIVE", Allocation.id != allocation.id)
+                .scalar_subquery()
+            )
+            target_capacity = select(Room.capacity).where(Room.id == room.id).scalar_subquery()
+            moved = db.execute(
+                update(Allocation)
+                .where(Allocation.id == allocation.id, Allocation.status == "ACTIVE", active_in_target < target_capacity)
+                .values(room_id=room.id, updated_at=utcnow())
+            )
+            if moved.rowcount == 0:
+                occupied = occupancy_count(db, room.id, excluding_allocation_id=allocation.id)
+                raise DomainError(409, "ROOM_FULL", "The target room has no available capacity.", {"occupied": occupied, "capacity": room.capacity})
+            db.expire(allocation)
         log_event(db, event_type="ALLOCATION_MODIFIED", outcome="SUCCESS", actor=actor, details={"allocation_id": allocation.id, "student_id": allocation.student.student_id, "old_room_id": old_room_id, "new_room_id": room.room_id})
         db.commit()
         return find_allocation(db, allocation.id)
@@ -227,6 +257,9 @@ def update_allocation(db: Session, allocation_id: int, target_room_id: str, acto
     except IntegrityError:
         _write_allocation_failure(db, actor, "ALLOCATION_MODIFIED", {"allocation_id": allocation_id, "error_code": "INTEGRITY_CONFLICT"})
         raise DomainError(409, "ALLOCATION_CONFLICT", "Allocation modification conflicts with an existing allocation.")
+    except Exception:
+        db.rollback()
+        raise
 
 
 def deallocate(db: Session, allocation_id: int, actor: User) -> None:

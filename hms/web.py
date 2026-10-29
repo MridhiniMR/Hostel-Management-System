@@ -231,7 +231,7 @@ def create_allocation_page(request: Request, student_id: str = Form(...), room_i
     except (ValidationError, ValueError, DomainError) as exc:
         message = exc.message if isinstance(exc, DomainError) else str(exc)
         return RedirectResponse(f"/allocations?error={_url_encode(message)}", status_code=303)
-    return RedirectResponse("/allocations?success=Allocation+created", status_code=303)
+    return RedirectResponse(f"/allocations?success={_url_encode(f'Allocated {payload.student_id} to room {payload.room_id}')}", status_code=303)
 
 
 @router.post("/allocations/{allocation_id}/deallocate")
