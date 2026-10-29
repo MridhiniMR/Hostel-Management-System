@@ -11,12 +11,12 @@ from hms.config import SESSION_COOKIE_NAME, SESSION_HOURS, SECURE_COOKIES
 from hms.database import get_db
 from hms.errors import DomainError
 from hms.models import Allocation, Room, Student, User
-from hms.schemas import AllocationCreate, RoomCreate, StudentCreate, StudentUpdate
+from hms.schemas import AllocationCreate, AllocationUpdate, RoomCreate, StudentCreate, StudentUpdate
 from hms.security import authenticate_and_issue_token, login_source_key, revoke_token, user_for_token
 from hms.services import (
     allocation_representation, create_allocation, create_room, create_student,
     deallocate, list_allocations, list_rooms, list_students, my_active_allocation,
-    room_representation, update_student,
+    room_representation, update_allocation, update_student,
 )
 
 router = APIRouter(tags=["Web interface"])
@@ -245,6 +245,33 @@ def deallocate_page(request: Request, allocation_id: int, db: Session = Depends(
         return RedirectResponse(f"/allocations?error={_url_encode(exc.message)}", status_code=303)
     return RedirectResponse("/allocations?success=Allocation+deallocated", status_code=303)
 
+@router.post("/allocations/{allocation_id}/modify")
+def modify_allocation_page(
+    request: Request,
+    allocation_id: int,
+    room_id: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user, response = _admin_or_response(request, db)
+    if response:
+        return response
+
+    try:
+        payload = AllocationUpdate(room_id=room_id)
+        allocation = update_allocation(
+            db, allocation_id, payload.room_id, user
+        )
+    except (ValidationError, ValueError, DomainError) as exc:
+        message = exc.message if isinstance(exc, DomainError) else str(exc)
+        return RedirectResponse(
+            f"/allocations?error={_url_encode(message)}",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        f"/allocations?success={_url_encode(f'Allocation {allocation_id} moved to room {allocation.room.room_id}')}",
+        status_code=303,
+    )
 
 @router.get("/my-allocation", response_class=HTMLResponse)
 def my_allocation_page(request: Request, db: Session = Depends(get_db)):

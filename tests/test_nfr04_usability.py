@@ -68,3 +68,61 @@ def test_nfr04_error_messages_are_plain_language(system):
     assert "already has an active room allocation" in duplicate.text
     full = client.post("/allocations", data={"student_id": "S102", "room_id": "R101"})
     assert "no available capacity" in full.text
+
+def test_fr07_modify_allocation_through_web_form(system):
+    client = system["client"]
+    _login_and_seed(client)
+
+    # Create an allocation in R101.
+    created = client.post(
+        "/allocations",
+        data={"student_id": "S101", "room_id": "R101"},
+    )
+    assert created.status_code == 200
+
+    # Find the allocation ID from the allocations API.
+    api_login = client.post(
+        "/api/v1/auth/login",
+        json={
+            "identifier": "warden",
+            "password": "CorrectHorseBattery9!",
+        },
+    )
+    assert api_login.status_code == 200
+    headers = {
+        "Authorization": f"Bearer {api_login.json()['access_token']}"
+    }
+    allocations = client.get("/api/v1/allocations", headers=headers)
+    assert allocations.status_code == 200
+    allocation = next(
+        a for a in allocations.json() if a["student_id"] == "S101"
+    )
+
+    # Move the allocation from R101 to R102.
+    response = client.post(
+        f"/allocations/{allocation['allocation_id']}/modify",
+        data={"room_id": "R102"},
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert "moved to room R102" in response.text
+
+    updated = client.get("/api/v1/allocations", headers=headers).json()
+    moved = next(a for a in updated if a["student_id"] == "S101")
+    assert moved["room_id"] == "R102"
+
+
+def test_fr07_modify_form_is_shown_for_active_allocations(system):
+    client = system["client"]
+    _login_and_seed(client)
+
+    client.post(
+        "/allocations",
+        data={"student_id": "S101", "room_id": "R101"},
+    )
+
+    page = client.get("/allocations")
+    assert page.status_code == 200
+    assert "/modify" in page.text
+    assert "Change room" in page.text
+    assert "Deallocate" in page.text
