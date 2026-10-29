@@ -8,3 +8,4 @@ hostel.db
 .coverage
 htmlcov/
 .DS_Store
+hostel_perf.db

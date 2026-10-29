@@ -1,0 +1,18 @@
+{
+  "started_at_utc": "2026-10-29T16:43:23.597696+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "configured_concurrent_users": 50,
+  "authenticated_users": 50,
+  "requests_per_user": 10,
+  "read_requests_attempted": 500,
+  "successful_read_requests": 500,
+  "failed_requests": 0,
+  "duration_seconds": 5.473,
+  "requests_per_second": 91.35,
+  "average_latency_ms": 476.59,
+  "p95_latency_ms": 1544.93,
+  "requests_under_2_seconds_percent": 97.6,
+  "target_met": true,
+  "failure_samples": [],
+  "note": "Local development measurement only. Results depend on the machine, server configuration, SQLite database, and dataset."
+}
