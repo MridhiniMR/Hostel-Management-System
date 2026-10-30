@@ -16,6 +16,14 @@ from hms.repositories import (
     find_student,
     occupancy_count,
     search_students,
+    dashboard_counts,
+    create_record,
+    find_user_by_username,
+    list_rooms_ordered,
+    list_allocations_ordered,
+    find_student_by_account_user_id,
+    recent_audit_events_ordered,
+    save_record,
 )
 from hms.security import hash_password, log_event
 from hms.schemas import validate_identifier
@@ -29,21 +37,28 @@ def create_user(db: Session, username: str, password: str, role: str = "STUDENT"
         raise ValueError("Username contains unsupported characters.")
     if len(password) < 10:
         raise ValueError("Password must contain at least 10 characters.")
+
     role = role.upper()
     if role not in {"ADMIN", "STUDENT"}:
         raise ValueError("Role must be ADMIN or STUDENT.")
-    if db.scalar(select(User).where(User.username == username)):
-        raise ValueError("Username already exists.")
-    user = User(username=username, password_hash=hash_password(password), role=role, is_active=True)
-    db.add(user)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise ValueError("Username already exists.")
-    db.refresh(user)
-    return user
 
+    if find_user_by_username(db, username):
+        raise ValueError("Username already exists.")
+
+    user = User(
+        username=username,
+        password_hash=hash_password(password),
+        role=role,
+        is_active=True,
+    )
+    create_record(db, user)
+
+    try:
+        save_record(db, user)
+    except IntegrityError:
+        raise ValueError("Username already exists.")
+
+    return user
 
 def create_student(db: Session, data: dict, actor: User) -> Student:
     data = dict(data)
@@ -57,7 +72,7 @@ def create_student(db: Session, data: dict, actor: User) -> Student:
     account_username = data.pop("account_username", None)
     account_user_id = None
     if account_username:
-        linked_user = db.scalar(select(User).where(User.username == account_username))
+        linked_user = find_user_by_username(db, account_username)
         if linked_user is None or linked_user.role != "STUDENT":
             raise DomainError(422, "INVALID_STUDENT_ACCOUNT", "The linked account must exist and have the STUDENT role.")
         if linked_user.student_profile is not None:
@@ -73,16 +88,15 @@ def create_student(db: Session, data: dict, actor: User) -> Student:
         year_of_study=data.get("year_of_study"),
         account_user_id=account_user_id,
     )
-    db.add(student)
-    log_event(db, event_type="STUDENT_CREATED", outcome="SUCCESS", actor=actor, details={"student_id": student_id})
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise DomainError(409, "STUDENT_ALREADY_EXISTS", "A conflicting student record or account link already exists.")
-    db.refresh(student)
-    return student
+    create_record(db, student)
+    log_event(db, event_type="STUDENT_CREATED", outcome="SUCCESS",actor=actor, details={"student_id": student_id})
 
+    try:
+        save_record(db, student)
+    except IntegrityError:
+        raise DomainError(409, "STUDENT_ALREADY_EXISTS", "A conflicting student record or account link already exists.")
+
+    return student
 
 def update_student(db: Session, student_id: str, changes: dict, actor: User) -> Student:
     student = find_student(db, student_id)
@@ -99,11 +113,10 @@ def update_student(db: Session, student_id: str, changes: dict, actor: User) -> 
     student.updated_at = utcnow()
     log_event(db, event_type="STUDENT_UPDATED", outcome="SUCCESS", actor=actor, details={"student_id": student_id, "fields": sorted(changes)})
     try:
-        db.commit()
+        save_record(db, student)
     except IntegrityError:
-        db.rollback()
         raise DomainError(409, "STUDENT_UPDATE_CONFLICT", "Student update conflicts with an existing record.")
-    db.refresh(student)
+
     return student
 
 
@@ -114,16 +127,15 @@ def create_room(db: Session, room_id: str, capacity: int, actor: User) -> Room:
     if find_room(db, room_id):
         raise DomainError(409, "ROOM_ALREADY_EXISTS", "A room with this identifier already exists.")
     room = Room(room_id=room_id, capacity=capacity)
-    db.add(room)
+    create_record(db, room)
     log_event(db, event_type="ROOM_CREATED", outcome="SUCCESS", actor=actor, details={"room_id": room_id})
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise DomainError(409, "ROOM_ALREADY_EXISTS", "A room with this identifier already exists.")
-    db.refresh(room)
-    return room
 
+    try:
+        save_record(db, room)
+    except IntegrityError:
+        raise DomainError(409, "ROOM_ALREADY_EXISTS", "A room with this identifier already exists.")
+
+    return room
 
 def update_room(db: Session, room_id: str, capacity: int, actor: User) -> Room:
     room = find_room(db, room_id)
@@ -137,8 +149,7 @@ def update_room(db: Session, room_id: str, capacity: int, actor: User) -> Room:
     room.capacity = capacity
     room.updated_at = utcnow()
     log_event(db, event_type="ROOM_UPDATED", outcome="SUCCESS", actor=actor, details={"room_id": room_id, "capacity": capacity})
-    db.commit()
-    db.refresh(room)
+    save_record(db, room)
     return room
 
 
@@ -156,10 +167,11 @@ def get_room(db: Session, room_id: str) -> Room:
 
 def list_rooms(db: Session, available_only: bool = False) -> list[Room]:
     """Return rooms ordered by identifier; optionally only rooms with a free bed (FR-05)."""
-    rooms = list(db.scalars(select(Room).order_by(Room.room_id)))
+    rooms = list_rooms_ordered(db)
     if available_only:
         rooms = [room for room in rooms if occupancy_count(db, room.id) < room.capacity]
     return rooms
+
 def list_students(db: Session, query: str | None = None) -> list[Student]:
     return search_students(db, query)
 
@@ -292,16 +304,17 @@ def allocation_representation(allocation: Allocation) -> dict:
 
 
 def list_allocations(db: Session) -> list[Allocation]:
-    stmt = select(Allocation).options(joinedload(Allocation.student), joinedload(Allocation.room)).order_by(Allocation.id.desc())
-    return list(db.scalars(stmt))
-
+    return list_allocations_ordered(db)
 
 def my_active_allocation(db: Session, user: User) -> Allocation | None:
-    student = db.scalar(select(Student).where(Student.account_user_id == user.id))
+    student = find_student_by_account_user_id(db, user.id)
     if student is None:
         return None
     return active_allocation_for_student(db, student.id)
 
-
 def recent_audit_events(db: Session, limit: int = 100) -> list[AuditEvent]:
-    return list(db.scalars(select(AuditEvent).order_by(AuditEvent.timestamp.desc(), AuditEvent.id.desc()).limit(limit)))
+    return recent_audit_events_ordered(db, limit)
+
+def get_dashboard_counts(db: Session) -> dict:
+    """Get summary counts for the dashboard."""
+    return dashboard_counts(db)
