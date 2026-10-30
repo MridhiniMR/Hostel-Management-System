@@ -4,19 +4,18 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from hms.config import SESSION_COOKIE_NAME, SESSION_HOURS, SECURE_COOKIES
 from hms.database import get_db
 from hms.errors import DomainError
-from hms.models import Allocation, Room, Student, User
+from hms.models import User
 from hms.schemas import AllocationCreate, AllocationUpdate, RoomCreate, StudentCreate, StudentUpdate
 from hms.security import authenticate_and_issue_token, login_source_key, revoke_token, user_for_token
 from hms.services import (
     allocation_representation, create_allocation, create_room, create_student,
     deallocate, list_allocations, list_rooms, list_students, my_active_allocation,
-    room_representation, update_allocation, update_student,
+    room_representation, update_allocation, update_student,get_dashboard_counts
 )
 
 router = APIRouter(tags=["Web interface"])
@@ -88,11 +87,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     user = _current_user(request, db)
     if user is None:
         return _login_redirect()
-    counts = {
-        "students": db.scalar(select(func.count(Student.id))) or 0,
-        "rooms": db.scalar(select(func.count(Room.id))) or 0,
-        "active_allocations": db.scalar(select(func.count(Allocation.id)).where(Allocation.status == "ACTIVE")) or 0,
-    }
+    counts = get_dashboard_counts(db)
     return templates.TemplateResponse(request=request, name="dashboard.html", context={"user": user, "counts": counts})
 
 
@@ -141,7 +136,6 @@ def edit_student_page(request: Request, student_id: str, db: Session = Depends(g
     user, response = _admin_or_response(request, db)
     if response:
         return response
-    from hms.repositories import find_student
     student = find_student(db, student_id)
     if student is None:
         return templates.TemplateResponse(request=request, name="error.html", context={"user": user, "title": "Not found", "message": "Student was not found."}, status_code=404)
