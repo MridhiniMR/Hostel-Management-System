@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.encoders import jsonable_encoder
 
+from hms.database import Base, engine, get_db
 from hms.api import router as api_router
 from hms.config import APP_NAME, REQUIRE_HTTPS
-from hms.database import Base, engine
 from hms.errors import DomainError
 from hms import models  # noqa: F401 - ensure SQLAlchemy models are registered before create_all
 from hms.web import router as web_router
@@ -60,9 +63,22 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 @app.get("/health", tags=["health"])
-def health():
-    return {"status": "ok"}
+def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "unavailable",
+                "database": "unavailable",
+            },
+        )
 
+    return {
+        "status": "ok",
+        "database": "ok",
+    }
 
 app.mount("/static", StaticFiles(directory="hms/static"), name="static")
 app.include_router(api_router)

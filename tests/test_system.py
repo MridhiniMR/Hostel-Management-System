@@ -14,7 +14,10 @@ def login(client, username: str = "warden", password: str = "CorrectHorseBattery
 
 def test_health_and_unauthenticated_access(system):
     client = system["client"]
-    assert client.get("/health").json() == {"status": "ok"}
+    assert client.get("/health").json() == {
+        "status": "ok",
+        "database": "ok",
+    }
     response = client.get("/api/v1/students")
     assert response.status_code == 401
     assert response.json()["error_code"] == "AUTHENTICATION_REQUIRED"

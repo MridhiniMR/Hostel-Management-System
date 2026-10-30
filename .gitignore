@@ -9,3 +9,4 @@ hostel.db
 htmlcov/
 .DS_Store
 hostel_perf.db
+availability.db
