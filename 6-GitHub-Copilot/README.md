@@ -2,7 +2,7 @@
 
 ## GitHub Copilot Usage Status
 
-GitHub Copilot was not used during the development of the Hostel Management System by Manasi Jadhav.
+GitHub Copilot was not used during the development of the Hostel Management System.
 
 ChatGPT was used separately as an AI assistance tool to obtain coding guidance, understand implementation concepts, and troubleshoot development issues.
 
