@@ -15,7 +15,7 @@ The supplied Architecture & Design document defines:
 - Design decisions and constraints
 - Deployment view
 
-See `Architecture_and_Design.docx` for the full source document.
+See Architecture_and_Design.pdf for the full architecture and design document, including component and sequence diagrams.
 
 ## Required Visual Evidence
 
