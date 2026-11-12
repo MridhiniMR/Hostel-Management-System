@@ -12,10 +12,10 @@
 
 | WBS | Activity | Deliverable | Owner | Status |
 |---|---|---|---|---|
-| 2.1 | Define functional requirements | FR-01 to FR-09 | TODO | TODO |
-| 2.2 | Define non-functional requirements | NFR-01 to NFR-05 | TODO | TODO |
-| 2.3 | Define security requirements | SEC-01 to SEC-06 | TODO | TODO |
-| 2.4 | Maintain traceability | RTM | TODO | TODO |
+| 2.1 | Define functional requirements | FR-01 to FR-09 | Mridhini M R | Completed |
+| 2.2 | Define non-functional requirements | NFR-01 to NFR-05 | Mridhini M R | Completed |
+| 2.3 | Define security requirements | SEC-01 to SEC-06 | Mridhini M R | Completed |
+| 2.4 | Maintain traceability | RTM | Mridhini M R | Completed |
 
 ## 3. Architecture and Design
 
@@ -41,12 +41,12 @@
 
 | WBS | Activity | Deliverable | Owner | Status |
 |---|---|---|---|---|
-| 5.1 | Prepare test environment | Test environment | TODO | TODO |
-| 5.2 | Execute functional tests | TP-01 to TP-10 results | TODO | TODO |
+| 5.1 | Prepare test environment | Test environment | Mridhini M R |  Completed |
+| 5.2 | Execute functional tests | TP-01 to TP-10 results | Mridhini M R | Completed |
 | 5.3 | Execute NFR tests | TP-11 to TP-13 results | TODO | TODO |
-| 5.4 | Execute security tests | TP-14 results | Manasi Jadhav | Completed |
-| 5.5 | Fix defects | Patch/commit evidence | Manasi Jadhav | Completed |
-| 5.6 | Retest | Retest evidence | Manasi Jadhav | Completed |
+| 5.4 | Execute security tests | TP-14 results | Manasi Jadhav,Mridhini M R | Completed |
+| 5.5 | Fix defects | Patch/commit evidence | Manasi Jadhav,Mridhini M R | Completed |
+| 5.6 | Retest | Retest evidence | Manasi Jadhav,Mridhini M R | Completed |
 
 ## 6. Deployment and Demonstration
 
