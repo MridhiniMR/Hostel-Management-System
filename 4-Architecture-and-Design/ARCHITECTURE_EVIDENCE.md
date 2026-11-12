@@ -17,7 +17,21 @@ The supplied Architecture & Design document defines:
 
 See Architecture_and_Design.pdf for the full architecture and design document, including component and sequence diagrams.
 
-## Required Visual Evidence
+## Visual Evidence
+
+The architecture diagrams are included in `Architecture_and_Design.pdf`.
+
+| Evidence | Location in PDF |
+|---|---|
+| High-level component diagram | Page 2 |
+| Data model diagram/table | Page 2 |
+| Room allocation sequence diagram | Page 3 |
+| Student details update sequence diagram | Page 4 |
+| API design and error handling | Pages 4–5 |
+| Deployment view | Page 5 |
+
+These diagrams document the system architecture, component interactions, data organization, API structure, and deployment design.
+
 
 
 
