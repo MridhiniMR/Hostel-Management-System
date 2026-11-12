@@ -1,21 +1,11 @@
 # GitHub Copilot Evidence
 
-Add screenshots showing the **actual use of GitHub Copilot** in the project.
+## GitHub Copilot Usage Status
 
-Recommended evidence:
-1. Copilot prompt/request.
-2. Generated suggestion/code.
-3. Team review/edit of the generated code.
-4. Final accepted code in the repository.
-5. Commit/PR showing the resulting change, where applicable.
+GitHub Copilot was not used during the development of the Hostel Management System by Manasi Jadhav.
 
-Recommended names:
-- `01-copilot-prompt.png`
-- `02-copilot-generated-code.png`
-- `03-reviewed-code.png`
-- `04-final-code.png`
-- `05-commit-or-pr.png`
+ChatGPT was used separately as an AI assistance tool to obtain coding guidance, understand implementation concepts, and troubleshoot development issues.
 
-Also add `COPILOT_SUMMARY.md` describing what was generated, what the team changed, and how it was validated.
+Since GitHub Copilot was not used, no Copilot-generated code, prompts, or Copilot-specific commit evidence are available for this contribution.
 
-Do not claim Copilot was used unless the screenshots/evidence show actual usage.
+No GitHub Copilot usage is claimed for this work.
