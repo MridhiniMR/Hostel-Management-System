@@ -32,10 +32,10 @@
 | WBS | Activity | Deliverable | Owner | Status |
 |---|---|---|---|---|
 | 4.1 | Authentication | Authentication module | Manasi Jadhav | Completed |
-| 4.2 | Student management | Student module | TODO | TODO |
+| 4.2 | Student management | Student module | Mridhini M R | Completed |
 | 4.3 | Room management | Room module | TODO | TODO |
 | 4.4 | Allocation management | Allocation module | TODO | TODO |
-| 4.5 | Authorization/security | Security controls | Manasi Jadhav | Not applicable |
+| 4.5 | Authorization/security | Security controls | Manasi Jadhav, Mridhini M R | Completed |
 
 ## 5. Testing
 
@@ -44,15 +44,15 @@
 | 5.1 | Prepare test environment | Test environment | Mridhini M R |  Completed |
 | 5.2 | Execute functional tests | TP-01 to TP-10 results | Mridhini M R | Completed |
 | 5.3 | Execute NFR tests | TP-11 to TP-13 results | TODO | TODO |
-| 5.4 | Execute security tests | TP-14 results | Manasi Jadhav,Mridhini M R | Completed |
-| 5.5 | Fix defects | Patch/commit evidence | Manasi Jadhav,Mridhini M R | Completed |
-| 5.6 | Retest | Retest evidence | Manasi Jadhav,Mridhini M R | Completed |
+| 5.4 | Execute security tests | TP-14 results | Manasi Jadhav, Mridhini M R | Completed |
+| 5.5 | Fix defects | Patch/commit evidence | Manasi Jadhav, Mridhini M R | Completed |
+| 5.6 | Retest | Retest evidence | Manasi Jadhav, Mridhini M R | Completed |
 
 ## 6. Deployment and Demonstration
 
 | WBS | Activity | Deliverable | Owner | Status |
 |---|---|---|---|---|
-| 6.1 | Configure environment | Environment record | TODO | TODO |
-| 6.2 | Deploy application | Deployment evidence | TODO | TODO |
-| 6.3 | Record demonstration | Demo video/screenshots | TODO | TODO |
-| 6.4 | Final GitHub organization | Submission repository | TODO | TODO |
+| 6.1 | Configure environment | Environment record | Mridhini M R | Completed |
+| 6.2 | Deploy application | Deployment evidence | Mridhini M R | Completed |
+| 6.3 | Record demonstration | Demo video/screenshots | Mridhini M R | Completed |
+| 6.4 | Final GitHub organization | Submission repository | Mridhini M R | Completed |
