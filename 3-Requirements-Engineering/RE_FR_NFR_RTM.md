@@ -51,6 +51,7 @@ This folder consolidates the requirements baseline and its traceability for the 
 | FR-08 | TP-09 |
 | FR-09 | TP-10 |
 | NFR-01 | TP-11 |
+| NFR-02 | NFR02_AVAILABILITY.md — health monitoring, outage detection, recovery recording and monthly availability report |
 | NFR-03 | TP-12 |
 | NFR-04 | TP-13 |
 | NFR-05 | Architecture inspection |
