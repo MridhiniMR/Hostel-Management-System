@@ -1,14 +1,18 @@
-# Project Creation / GitHub / Jira Evidence
+# Project Creation / GitHub Evidence
 
-Recommended files:
-- `github-repository.png`
-- `github-folder-structure.png`
-- `jira-project.png`
-- `jira-backlog.png`
-- `jira-sprint-1.png`
-- `jira-sprint-2.png` (if applicable)
-- `jira-board.png`
-- `issues-or-tasks.png`
+The project is managed using GitHub for source-code management, issue tracking, task assignments, pull requests, and collaboration.
 
-### Important
-These screenshots cannot be generated from the four supplied documents because they are external project-history evidence. Capture them from the team's actual GitHub and Jira accounts.
+## Required Screenshots
+
+- `GitHub_Repository.png` — Main repository overview.
+- `GitHub_Folder_Structure.png` — Project folder structure.
+- `GitHub_Issues.png` — Project issues and team task assignments.
+- `GitHub_Pull_Requests.png` — Pull requests and merge history.
+- `GitHub_Commits.png` — Team contribution and commit history.
+
+## Individual Contribution Evidence
+
+Individual testing and contribution screenshots are stored in the `screenshots/` folder.
+
+These include authentication tests, security tests, full test-suite results, GitHub contribution history, and merged pull-request evidence.
+
