@@ -35,7 +35,7 @@
 | 4.2 | Student management | Student module | TODO | TODO |
 | 4.3 | Room management | Room module | TODO | TODO |
 | 4.4 | Allocation management | Allocation module | TODO | TODO |
-| 4.5 | Authorization/security | Security controls | Manasi Jadhav | Completed |
+| 4.5 | Authorization/security | Security controls | Manasi Jadhav | Not applicable |
 
 ## 5. Testing
 
