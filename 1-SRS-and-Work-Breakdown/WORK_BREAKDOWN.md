@@ -1,9 +1,5 @@
 # Work Breakdown Structure (WBS)
 
-> **Status: TO BE UPDATED WITH THE TEAM'S ACTUAL WORK.**
->
-> The four supplied project documents do not contain the team's historical task allocation or Jira sprint history. The table below is a submission-ready structure based only on the documented project scope. Replace the TODO cells with actual team/member information.
-
 ## 1. Project Planning
 
 | WBS | Activity | Deliverable | Owner | Status |
